@@ -221,7 +221,7 @@ impl ::std::str::FromStr for Rope {
 
 impl<'a> fmt::Display for RopeSlice<'a> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if self.nodes.len() == 0 {
+        if self.nodes.is_empty() {
             return Ok(());
         }
 
@@ -237,9 +237,11 @@ impl<'a> fmt::Display for RopeSlice<'a> {
                 len = self.len;
             }
             unsafe {
-                try!(write!(fmt,
-                            "{}",
-                            ::std::str::from_utf8(::std::slice::from_raw_parts(ptr, len)).unwrap()));
+                // Use the `?` operator for error handling
+                write!(fmt,
+                    "{}",
+                    ::std::str::from_utf8(::std::slice::from_raw_parts(ptr, len)).unwrap()
+                )?;
             }
         }
         Ok(())
@@ -248,7 +250,7 @@ impl<'a> fmt::Display for RopeSlice<'a> {
 
 impl<'a> fmt::Debug for RopeSlice<'a> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let last_idx = self.nodes.len() - 1;
+        let last_idx = self.nodes.len().saturating_sub(1); // Handle case when `self.nodes` is empty
         for (i, n) in self.nodes.iter().enumerate() {
             let mut ptr = n.text;
             let mut len = n.len;
@@ -256,15 +258,18 @@ impl<'a> fmt::Debug for RopeSlice<'a> {
                 ptr = (ptr as usize + self.start) as *const u8;
                 len -= self.start;
             } else {
-                try!(write!(fmt, "|"));
+                // Use `?` for error handling
+                write!(fmt, "|")?;
             }
             if i == last_idx {
                 len = self.len;
             }
             unsafe {
-                try!(write!(fmt,
-                            "\"{}\"",
-                            ::std::str::from_utf8(::std::slice::from_raw_parts(ptr, len)).unwrap()));
+                // Use `?` for error handling
+                write!(fmt,
+                    "\"{}\"",
+                    ::std::str::from_utf8(::std::slice::from_raw_parts(ptr, len)).unwrap()
+                )?;
             }
         }
         Ok(())
@@ -312,26 +317,38 @@ impl fmt::Debug for Node {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match *self {
             Node::InnerNode(Inode { ref left, ref right, weight, .. }) => {
-                try!(write!(fmt, "("));
+                // Write the opening parenthesis
+                write!(fmt, "(")?;
+
+                // Write the left node
                 if let Some(ref left) = *left {
-                    try!(write!(fmt, "left: {:?}", &**left));
+                    write!(fmt, "left: {:?}", &**left)?;
                 } else {
-                    try!(write!(fmt, "left: ()"));
+                    write!(fmt, "left: ()")?;
                 }
-                try!(write!(fmt, ", "));
+
+                // Write a separator
+                write!(fmt, ", ")?;
+
+                // Write the right node
                 if let Some(ref right) = *right {
-                    try!(write!(fmt, "right: {:?}", &**right));
+                    write!(fmt, "right: {:?}", &**right)?;
                 } else {
-                    try!(write!(fmt, "right: ()"));
+                    write!(fmt, "right: ()")?;
                 }
+
+                // Write the closing part with the weight
                 write!(fmt, "; {})", weight)
             }
-            Node::LeafNode(Lnode{ ref text, len, .. }) => {
+            Node::LeafNode(Lnode { ref text, len, .. }) => {
                 unsafe {
-                    write!(fmt,
-                           "(\"{}\"; {})",
-                           ::std::str::from_utf8(::std::slice::from_raw_parts(*text, len)).unwrap(),
-                           len)
+                    // Write the leaf node content
+                    write!(
+                        fmt,
+                        "(\"{}\"; {})",
+                        ::std::str::from_utf8(::std::slice::from_raw_parts(*text, len)).unwrap(),
+                        len
+                    )
                 }
             }
         }

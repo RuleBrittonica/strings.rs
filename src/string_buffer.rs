@@ -135,7 +135,7 @@ impl StringNode {
         }
     }
 
-    // Returns a reference to the new last node. 
+    // Returns a reference to the new last node.
     fn push_str(&mut self, text: &str) -> &mut StringNode {
         if let Some(ref mut n) = self.next {
             return n.push_str(text);
@@ -193,7 +193,7 @@ impl FromStr for StringBuffer {
 impl fmt::Display for StringBuffer {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         fn fmt_node(node: &StringNode, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-            try!(write!(fmt, "{}", node.data));
+            write!(fmt, "{}", node.data)?;
             if let Some(ref n) = node.next {
                 fmt_node(n, fmt)
             } else {
@@ -207,11 +207,11 @@ impl fmt::Display for StringBuffer {
 
 impl fmt::Debug for StringBuffer {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "StringBuffer[{:?}", self.first.data));
+        write!(f, "StringBuffer[{:?}", self.first.data)?;
 
         let mut current = &self.first;
         while let Some(next) = current.next.as_ref() {
-            try!(write!(f, ", {:?}", next.data));
+            write!(f, ", {:?}", next.data)?;
             current = next;
         }
 
@@ -261,7 +261,7 @@ impl Clone for StringBuffer {
         };
 
         {
-            let mut last = &mut *result.first;
+            let last = &mut *result.first;
             let mut last_orig = &*self.first;
 
             while let Some(next_orig) = last_orig.next.as_ref() {
